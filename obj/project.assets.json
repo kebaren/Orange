@@ -106,23 +106,26 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\janto\\.nuget\\packages\\": {},
+    "C:\\Users\\KEBAREN\\.nuget\\packages\\": {},
+    "C:\\Users\\KEBAREN\\AppData\\Roaming\\Godot\\mono\\GodotNuGetFallbackFolder": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\csharp\\orange\\orange.csproj",
+      "projectUniqueName": "D:\\_zTemp\\orange\\orange.csproj",
       "projectName": "orange",
-      "projectPath": "D:\\csharp\\orange\\orange.csproj",
-      "packagesPath": "C:\\Users\\janto\\.nuget\\packages\\",
-      "outputPath": "D:\\csharp\\orange\\obj\\",
+      "projectPath": "D:\\_zTemp\\orange\\orange.csproj",
+      "packagesPath": "C:\\Users\\KEBAREN\\.nuget\\packages\\",
+      "outputPath": "D:\\_zTemp\\orange\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
+        "C:\\Users\\KEBAREN\\AppData\\Roaming\\Godot\\mono\\GodotNuGetFallbackFolder",
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\janto\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\KEBAREN\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\KEBAREN\\AppData\\Roaming\\NuGet\\config\\Godot.Offline.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
