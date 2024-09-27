@@ -1,23 +1,24 @@
-namespace buffer;
+namespace piecetable;
+
 
 public class TreeNode{
-    TreeNode ?parent;
-    TreeNode ?left;
-    TreeNode ?right;
-    NodeColor color;
+    public TreeNode ?parent;
+    public TreeNode ?left;
+    public TreeNode ?right;
+    public NodeColor color;
 
-    Piece piece;
-    int size_left;
-    int size_right;
+    public Piece piece;
+    public int size_left;
+    public int lf_left;
 
-    public const TreeNode SENTINEL = new TreeNode(new Piece(0, new BufferCursor(0, 0), new BufferCursor(0, 0), 0, 0), NodeColor.Black);
+    public readonly TreeNode SENTINEL = new TreeNode(new Piece(0, new BufferCursor(0, 0), new BufferCursor(0, 0), 0, 0), NodeColor.Black);
 
-    TreeNode(Piece piece, NodeColor color)
+    public TreeNode(Piece piece, NodeColor color)
     {
         this.piece = piece;
         this.color=color;
         this.size_left = 0;
-        this.size_right = 0;
+        this.lf_left = 0;
         this.parent = null;
         this.left = null;
         this.right = null;
@@ -25,4 +26,5 @@ public class TreeNode{
         this.left = this;
         this.right = this;
     }
+    public TreeNode(){}
 }

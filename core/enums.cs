@@ -1,4 +1,4 @@
-namespace buffer;
+namespace piecetable;
 
 //reference vscode char code
 public enum CharCode{
