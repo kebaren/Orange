@@ -119,7 +119,7 @@ public class NodePosition
 
 public class PieceIndex
 {
-    TreeNode ?node;
+    TreeNode? node;
     int remainder;
     int nodeStartOffset;
 }
@@ -197,7 +197,7 @@ public class PieceTreeSearchCache
         for (int i = len - 1; i >= 0; i--)
         {
             var nodePos = this._cache[i];
-            if (nodePos.nodeStartOffset <= offset && nodePos.nodeStartOffset + nodePos.node.piece.length >= offset)
+            if (nodePos.nodeStartOffset <= offset && nodePos.nodeStartOffset + nodePos.node.piece!.length >= offset)
             {
                 return nodePos;
             }
@@ -211,7 +211,7 @@ public class PieceTreeSearchCache
         for (int i = len - 1; i >= 0; i--)
         {
             var nodePos = this._cache[i];
-            if (nodePos.nodeStartLineNumber != null && nodePos.nodeStartLineNumber < lineNumber && nodePos.nodeStartLineNumber + nodePos.node.piece.lineFeedCnt >= lineNumber)
+            if (nodePos.nodeStartLineNumber != null && nodePos.nodeStartLineNumber < lineNumber && nodePos.nodeStartLineNumber + nodePos.node.piece!.lineFeedCnt >= lineNumber)
             {
                 return (nodePos.node, nodePos.nodeStartOffset, nodePos.nodeStartLineNumber);
             }
@@ -323,9 +323,9 @@ public class PieceTreeBase
     public required TreeNode root;
 
     List<StringBuffer>? _buffers;
-    int _lineCnt{set;get;}
-    int _length{set;get;}
-        
+    int _lineCnt { set; get; }
+    int _length { set; get; }
+
     EOL _EOL;
     int _EOLLength;
 
@@ -339,12 +339,12 @@ public class PieceTreeBase
 
     public PieceTreeBase(List<StringBuffer> chunks, EOL eol, bool eolNormalized)
     {
-       this.crate(chunks,eol,eolNormalized);
+        this.crate(chunks, eol, eolNormalized);
     }
 
     public void crate(List<StringBuffer> chunks, EOL eol, bool eolNormalized)
     {
-         this._buffers = new List<StringBuffer>();
+        this._buffers = new List<StringBuffer>();
         this._lastChangeBufferPos = new BufferCursor(0, 0);
         this.root = SENTINEL;
         this._lineCnt = 1;
@@ -371,7 +371,7 @@ public class PieceTreeBase
         }
 
         this._searchCache = new PieceTreeSearchCache(1);
-        this._lastVisitedLine = (1,"");
+        this._lastVisitedLine = (1, "");
         computeBufferMetadata();
     }
 
@@ -381,19 +381,20 @@ public class PieceTreeBase
         var eolStr = "";
         if (eol == EOL.LF) eolStr = "\n";
         else eolStr = "\r\n";
-        var averageBufferSize  = 65535;
-        var min = averageBufferSize - Math.Floor(Convert.ToDouble(averageBufferSize/3));
-        var max = min *2;
+        var averageBufferSize = 65535;
+        var min = averageBufferSize - Math.Floor(Convert.ToDouble(averageBufferSize / 3));
+        var max = min * 2;
 
         var tempChunk = "";
         var tempChunkLen = 0;
 
         var chunks = new List<StringBuffer>();
 
-        this.iterate(this.root, node=>{
+        this.iterate(this.root, node =>
+        {
             var str = this.getNodeContent(node);
             var len = str.Length;
-            if(tempChunkLen <= min || tempChunkLen + len < max)
+            if (tempChunkLen <= min || tempChunkLen + len < max)
             {
                 tempChunk += str;
                 tempChunkLen += len;
@@ -402,25 +403,25 @@ public class PieceTreeBase
 
             String text;
             //flush anyways
-            text = tempChunk.Replace("\r\n",eolStr).Replace("\r",eolStr).Replace("\n",eolStr);
+            text = tempChunk.Replace("\r\n", eolStr).Replace("\r", eolStr).Replace("\n", eolStr);
             chunks.Append(new StringBuffer(text, new LineStarts().createLineStartsFast(text)));
             tempChunk = str;
             tempChunkLen = len;
             return true;
         });
 
-        if(tempChunkLen > 0)
+        if (tempChunkLen > 0)
         {
-            var text = tempChunk.Replace("\r\n",eolStr).Replace("\r",eolStr).Replace("\n",eolStr);
+            var text = tempChunk.Replace("\r\n", eolStr).Replace("\r", eolStr).Replace("\n", eolStr);
             chunks.Append(new StringBuffer(text, new LineStarts().createLineStartsFast(text)));
 
         }
-        this.crate(chunks,eol,true);
+        this.crate(chunks, eol, true);
     }
 
     public string getEOL()
     {
-        if(this._EOL == EOL.LF) return "\n";
+        if (this._EOL == EOL.LF) return "\n";
         else return "\r\n";
     }
 
@@ -433,24 +434,25 @@ public class PieceTreeBase
 
     public PieceTreeSnapshot creatSnapshot(String BOM)
     {
-        return new PieceTreeSnapshot(this,BOM);
+        return new PieceTreeSnapshot(this, BOM);
     }
 
     public bool equal(PieceTreeBase other)
     {
-        if(this._length != other._length)
+        if (this._length != other._length)
         {
             return false;
         }
 
-        if(this._lineCnt != other._lineCnt)
+        if (this._lineCnt != other._lineCnt)
         {
             return false;
         }
 
         var offset = 0;
-        var ret = this.iterate(this.root, node=>{
-            if(node == SENTINEL)
+        var ret = this.iterate(this.root, node =>
+        {
+            if (node == SENTINEL)
             {
                 return true;
             }
@@ -458,8 +460,8 @@ public class PieceTreeBase
             var str = this.getNodeContent(node);
             var len = str.Length;
             var startPosition = other.nodeAt(offset);
-            var endPosition = other.nodeAt(offset+len);
-            var val = other.getValueInRange2(startPosition!,endPosition!);
+            var endPosition = other.nodeAt(offset + len);
+            var val = other.getValueInRange2(startPosition!, endPosition!);
 
             offset += len;
             return str == val;
@@ -473,22 +475,23 @@ public class PieceTreeBase
     {
         var x = this.root;
         var cache = this._searchCache.get(offset);
-        if(cache !=null)
+        if (cache != null)
         {
-            return  new NodePosition(cache.node,cache.nodeStartOffset,offset-cache.nodeStartOffset);
+            return new NodePosition(cache.node, cache.nodeStartOffset, offset - cache.nodeStartOffset);
         }
 
         var nodeStartOffset = 0;
-        while(x != SENTINEL )
+        while (x != SENTINEL)
         {
-            if(x!.size_left > offset)
+            if (x!.size_left > offset)
             {
                 x = x.left;
 
-            }else if(x.size_left + x.piece.length >= offset)
+            }
+            else if (x.size_left + x.piece!.length >= offset)
             {
                 nodeStartOffset += x.size_left;
-                var ret = new NodePosition(x,offset-x.size_left,nodeStartOffset);
+                var ret = new NodePosition(x, offset - x.size_left, nodeStartOffset);
                 this._searchCache.set(new CacheEntry(ret));
                 return ret;
             }
@@ -496,7 +499,7 @@ public class PieceTreeBase
 
         return null;
     }
-    
+
     NodePosition nodeAt2(int lineNumber, int column)
     {
         var x = this.root;
@@ -504,117 +507,268 @@ public class PieceTreeBase
         var accumulatedValue = 0;
         var prevAccumualtedValue = 0;
 
-        while(x != SENTINEL)
+        while (x != SENTINEL)
         {
-            if (x!.left != SENTINEL && x.lf_left >= lineNumber - 1) {
-				x = x.left;
-			} else if (x.lf_left + x.piece.lineFeedCnt > lineNumber - 1) {
-				prevAccumualtedValue = this.getAccumulatedValue(x, lineNumber - x.lf_left - 2);
-				accumulatedValue = this.getAccumulatedValue(x, lineNumber - x.lf_left - 1);
-				nodeStartOffset += x.size_left;
+            if (x!.left != SENTINEL && x.lf_left >= lineNumber - 1)
+            {
+                x = x.left;
+            }
+            else if (x.lf_left + x.piece!.lineFeedCnt > lineNumber - 1)
+            {
+                prevAccumualtedValue = this.getAccumulatedValue(x, lineNumber - x.lf_left - 2);
+                accumulatedValue = this.getAccumulatedValue(x, lineNumber - x.lf_left - 1);
+                nodeStartOffset += x.size_left;
 
-				return new NodePosition( x,Math.Min(prevAccumualtedValue + column - 1, accumulatedValue),nodeStartOffset);
-			} else if (x.lf_left + x.piece.lineFeedCnt == lineNumber - 1) {
-				prevAccumualtedValue = this.getAccumulatedValue(x, lineNumber - x.lf_left - 2);
-				if (prevAccumualtedValue + column - 1 <= x.piece.length) {
-					return new NodePosition( x,prevAccumualtedValue + column - 1,nodeStartOffset);
-				} else {
-					column -= x.piece.length - prevAccumualtedValue;
-					break;
-				}
-			} else {
-				lineNumber -= x.lf_left + x.piece.lineFeedCnt;
-				nodeStartOffset += x.size_left + x.piece.length;
-				x = x.right;
-			}
+                return new NodePosition(x, Math.Min(prevAccumualtedValue + column - 1, accumulatedValue), nodeStartOffset);
+            }
+            else if (x.lf_left + x.piece.lineFeedCnt == lineNumber - 1)
+            {
+                prevAccumualtedValue = this.getAccumulatedValue(x, lineNumber - x.lf_left - 2);
+                if (prevAccumualtedValue + column - 1 <= x.piece.length)
+                {
+                    return new NodePosition(x, prevAccumualtedValue + column - 1, nodeStartOffset);
+                }
+                else
+                {
+                    column -= x.piece.length - prevAccumualtedValue;
+                    break;
+                }
+            }
+            else
+            {
+                lineNumber -= x.lf_left + x.piece.lineFeedCnt;
+                nodeStartOffset += x.size_left + x.piece.length;
+                x = x.right;
+            }
         }
         x = x.next();
-		while (x != SENTINEL) {
+        while (x != SENTINEL)
+        {
 
-			if (x.piece.lineFeedCnt > 0) {
-				accumulatedValue = this.getAccumulatedValue(x, 0);
-				nodeStartOffset = this.offsetOfNode(x);
-				return new NodePosition( x,Math.Min(column - 1, accumulatedValue),nodeStartOffset);
-			} else {
-				if (x.piece.length >= column - 1) {
-					nodeStartOffset = this.offsetOfNode(x);
-					return new NodePosition( x, column - 1,nodeStartOffset);
-				} else {
-					column -= x.piece.length;
-				}
-			}
+            if (x.piece!.lineFeedCnt > 0)
+            {
+                accumulatedValue = this.getAccumulatedValue(x, 0);
+                nodeStartOffset = this.offsetOfNode(x);
+                return new NodePosition(x, Math.Min(column - 1, accumulatedValue), nodeStartOffset);
+            }
+            else
+            {
+                if (x.piece.length >= column - 1)
+                {
+                    nodeStartOffset = this.offsetOfNode(x);
+                    return new NodePosition(x, column - 1, nodeStartOffset);
+                }
+                else
+                {
+                    column -= x.piece.length;
+                }
+            }
 
-			x = x.next();
-		}
+            x = x.next();
+        }
 
-		return null!;
+        return null!;
     }
 
-    private int offsetOfNode( TreeNode node) {
-		if (node==null) {
-			return 0;
-		}
-		var pos = node.size_left;
-		while (node != this.root!) {
-			if (node.parent!.right == node) {
-				pos += node.parent.size_left + node.parent.piece.length;
-			}
+    private int nodeCharCodeAt(TreeNode node, int offset)
+    {
+        if (node.piece!.lineFeedCnt < 1)
+        {
+            return -1;
+        }
+        var buffer = this._buffers![node.piece.bufferIndex];
+        var newOffset = this.offsetInBuffer(node.piece.bufferIndex, node.piece.start) + offset;
+        return char.ConvertToUtf32(buffer.buffer, newOffset);
+    }
 
-			node = node.parent;
-		}
+    private int offsetOfNode(TreeNode node)
+    {
+        if (node == null)
+        {
+            return 0;
+        }
+        var pos = node.size_left;
+        while (node != this.root!)
+        {
+            if (node.parent!.right == node)
+            {
+                pos += node.parent.size_left + node.parent.piece!.length;
+            }
 
-		return pos;
-	}
+            node = node.parent;
+        }
+
+        return pos;
+    }
+
+    private bool shouldCheckCRLF()
+    {
+        return !(this._EOLNoramlized && this._EOL == EOL.LF);
+    }
+
+    private bool startWithLF(Object val)
+    {
+        if (val is string str)
+        {
+            return str.Length > 0 && (int)str[0] == 10;
+        }
+        if (val is TreeNode node)
+        {
+            if (node == SENTINEL || node.piece!.lineFeedCnt == 0)
+            {
+                return false;
+            }
+            Piece piece = node.piece;
+            StringBuffer buffer = _buffers![piece.bufferIndex];
+            int line = piece.start.line;
+            int startOffset = buffer.lineStarts[line] + piece.start.column;
+            if (line == buffer.lineStarts.Count() - 1)
+            {
+                // last line, so there is no line feed at the end of this line
+                return false;
+            }
+            int nextLineOffset = buffer.lineStarts[line + 1];
+            if (nextLineOffset > startOffset + 1)
+            {
+                return false;
+            }
+            return (int)buffer.buffer[startOffset] == 10;
+        }
+        return false;
+    }
+
+    private bool EndWithCR(object val)
+    {
+        if (val is string str)
+        {
+            return str.Length > 0 && (int)str[str.Length - 1] == 13;
+        }
+        if (val is TreeNode node)
+        {
+            if (node == SENTINEL || node.piece!.lineFeedCnt == 0)
+            {
+                return false;
+            }
+            return NodeCharCodeAt(node, node.piece.length - 1) == 13;
+        }
+        return false;
+    }
+
+    private void ValidateCRLFWithPrevNode(TreeNode nextNode)
+    {
+        if (shouldCheckCRLF() && startWithLF(nextNode))
+        {
+            TreeNode node = nextNode.prev();
+            if (EndWithCR(node))
+            {
+                FixCRLF(node, nextNode);
+            }
+        }
+    }
+
+    private void FixCRLF(TreeNode prev, TreeNode next)
+    {
+        var nodesToDel = new List<TreeNode>();
+        var lineStarts = this._buffers![prev.piece!.bufferIndex].lineStarts;
+        BufferCursor newEnd;
+
+        if(prev.piece!.end.column == 0)
+        {
+            newEnd = new BufferCursor(prev.piece.end.line-1, lineStarts[prev.piece.end.line]-lineStarts[prev.piece.end.line-1]-1);
+        }else{
+            newEnd = new BufferCursor(prev.piece.end.line, prev.piece.end.column-1);
+        }
+
+        var preVnewLength = prev.piece.length-1;
+        var prevNewLFCnt = prev.piece.lineFeedCnt-1;
+        prev.piece = new Piece(prev.piece.bufferIndex,prev.piece.start,newEnd,prevNewLFCnt,preVnewLength);
+
+        TreeNode.updateTreeMetadata(this,prev,-1,-1);
+        if(prev.piece.length == 0)
+        {
+            nodesToDel.Append(prev);
+        }
+        
+    }
+
+    private int NodeCharCodeAt(TreeNode node, int offset)
+    {
+        if (node.piece!.lineFeedCnt < 1)
+        {
+            return -1;
+        }
+        StringBuffer buffer = this._buffers![node.piece.bufferIndex];
+        int newOffset = OffsetInBuffer(node.piece.bufferIndex, node.piece.start) + offset;
+        return (int)buffer.buffer[newOffset];
+    }
+
+    private int OffsetInBuffer(int bufferIndex, BufferCursor cursor)
+    {
+        var lineStarts = this._buffers![bufferIndex].lineStarts;
+        return lineStarts[cursor.line] + cursor.column;
+    }
+
+
+
+
     public int getAccumulatedValue(TreeNode node, int index)
     {
-        if (index < 0) {
-			return 0;
-		}
-		var piece = node.piece;
-		var lineStarts = this._buffers![piece.bufferIndex].lineStarts;
-		var expectedLineStartIndex = piece.start.line + index + 1;
-		if (expectedLineStartIndex > piece.end.line) {
-			return lineStarts[piece.end.line] + piece.end.column - lineStarts[piece.start.line] - piece.start.column;
-		} else {
-			return lineStarts[expectedLineStartIndex] - lineStarts[piece.start.line] - piece.start.column;
-		}
+        if (index < 0)
+        {
+            return 0;
+        }
+        var piece = node.piece;
+        var lineStarts = this._buffers![piece!.bufferIndex].lineStarts;
+        var expectedLineStartIndex = piece.start.line + index + 1;
+        if (expectedLineStartIndex > piece.end.line)
+        {
+            return lineStarts[piece.end.line] + piece.end.column - lineStarts[piece.start.line] - piece.start.column;
+        }
+        else
+        {
+            return lineStarts[expectedLineStartIndex] - lineStarts[piece.start.line] - piece.start.column;
+        }
     }
 
-    public string getValueInRange2(NodePosition startPosition,NodePosition endPosition)
-    {   
-        string buffer= "";
+    public string getValueInRange2(NodePosition startPosition, NodePosition endPosition)
+    {
+        string buffer = "";
         int startOffset;
 
 
-        if(startPosition.node == endPosition.node)
+        if (startPosition.node == endPosition.node)
         {
             var node = startPosition.node;
-            buffer  =this._buffers![node!.piece.bufferIndex].buffer;
+            buffer = this._buffers![node!.piece!.bufferIndex].buffer;
             startOffset = this.offsetInBuffer(node.piece.bufferIndex, node.piece.start);
-            return buffer.Substring(startOffset+startPosition.remainder, endPosition.remainder);
-        }  
+            return buffer.Substring(startOffset + startPosition.remainder, endPosition.remainder);
+        }
 
         var x = startPosition.node;
-		buffer = this._buffers![x!.piece.bufferIndex].buffer;
-		startOffset = this.offsetInBuffer(x.piece.bufferIndex, x.piece.start);
-		var ret = buffer.Substring(startOffset + startPosition.remainder,  x.piece.length);
+        buffer = this._buffers![x!.piece!.bufferIndex].buffer;
+        startOffset = this.offsetInBuffer(x.piece.bufferIndex, x.piece.start);
+        var ret = buffer.Substring(startOffset + startPosition.remainder, x.piece.length);
 
-		x = x.next();
-		while (x != SENTINEL) {
-			 buffer = this._buffers[x.piece.bufferIndex].buffer;
-			 startOffset = this.offsetInBuffer(x.piece.bufferIndex, x.piece.start);
+        x = x.next();
+        while (x != SENTINEL)
+        {
+            buffer = this._buffers[x.piece!.bufferIndex].buffer;
+            startOffset = this.offsetInBuffer(x.piece.bufferIndex, x.piece.start);
 
-			if (x == endPosition.node) {
-				ret += buffer.Substring(startOffset, endPosition.remainder);
-				break;
-			} else {
-				ret += buffer.Substring(startOffset, x.piece.length);
-			}
+            if (x == endPosition.node)
+            {
+                ret += buffer.Substring(startOffset, endPosition.remainder);
+                break;
+            }
+            else
+            {
+                ret += buffer.Substring(startOffset, x.piece.length);
+            }
 
-			x = x.next();
-		}
+            x = x.next();
+        }
 
-		return ret;
+        return ret;
 
 
 
@@ -623,13 +777,13 @@ public class PieceTreeBase
 
     private String getNodeContent(TreeNode node)
     {
-        if(node == SENTINEL) return "";
+        if (node == SENTINEL) return "";
 
-        var buffer = this._buffers![node.piece.bufferIndex];
+        var buffer = this._buffers![node.piece!.bufferIndex];
         var piece = node.piece;
-        var startOffset = this.offsetInBuffer(piece.bufferIndex,piece.start);
-        var endOffset = this.offsetInBuffer(piece.bufferIndex,piece.end);
-        return  buffer.buffer.Substring(startOffset,endOffset);
+        var startOffset = this.offsetInBuffer(piece.bufferIndex, piece.start);
+        var endOffset = this.offsetInBuffer(piece.bufferIndex, piece.end);
+        return buffer.buffer.Substring(startOffset, endOffset);
     }
 
     void computeBufferMetadata()
@@ -638,9 +792,9 @@ public class PieceTreeBase
         var lfCnt = 1;
         var len = 0;
 
-        while(x != SENTINEL)
+        while (x != SENTINEL)
         {
-            lfCnt += x!.lf_left + x.piece.lineFeedCnt;
+            lfCnt += x!.lf_left + x.piece!.lineFeedCnt;
             len += x.size_left + x.piece.length;
             x = x.right;
         }
@@ -672,7 +826,7 @@ public class PieceTreeBase
         }
         else
         {
-            var nextNode = leftest(node.right);
+            var nextNode = TreeNode.leftest(node.right!);
             nextNode.left = z;
             z.parent = nextNode;
         }
@@ -690,7 +844,7 @@ public class PieceTreeBase
             if (x.parent == x.parent.parent!.left)
             {
                 var y = x.parent.parent.right;
-                if (y.color == NodeColor.Red)
+                if (y!.color == NodeColor.Red)
                 {
                     x.parent.color = NodeColor.Black;
                     y.color = NodeColor.Black;
@@ -714,7 +868,7 @@ public class PieceTreeBase
             {
                 var y = x.parent.parent.left;
 
-                if (y.color == NodeColor.Red)
+                if (y!.color == NodeColor.Red)
                 {
                     x.parent.color = NodeColor.Black;
                     y.color = NodeColor.Black;
@@ -738,6 +892,7 @@ public class PieceTreeBase
 
         tree.root.color = NodeColor.Black;
     }
+
 
     public void leftRotate(PieceTreeBase tree, TreeNode x)
     {
@@ -838,8 +993,8 @@ public class PieceTreeBase
         }
         x = x.parent!;
 
-        delta = calculateSize(x.left!) - x.size_left;
-        lf_delta = calculateLF(x.left!) - x.lf_left;
+        delta = TreeNode.calculateSize(x.left!) - x.size_left;
+        lf_delta = TreeNode.calculateLF(x.left!) - x.lf_left;
 
         x.size_left += delta;
         x.lf_left += lf_delta;
@@ -855,26 +1010,6 @@ public class PieceTreeBase
             x = x.parent;
         }
     }
-
-    public int calculateSize(TreeNode node)
-    {
-        if (node == SENTINEL)
-        {
-            return 0;
-        }
-        return node.size_left + node.piece.length + calculateSize(node.right!);
-    }
-
-    public int calculateLF(TreeNode node)
-    {
-        if (node == SENTINEL)
-        {
-            return 0;
-        }
-        return node.lf_left + node.piece.length + calculateLF(node.right!);
-    }
-
-    
 
 
     private string getEOLString(EOL eol)
