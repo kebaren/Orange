@@ -637,7 +637,7 @@ public class PieceTreeBase
         return false;
     }
 
-    private bool EndWithCR(object val)
+    private bool endWithCR(object val)
     {
         if (val is string str)
         {
@@ -659,14 +659,26 @@ public class PieceTreeBase
         if (shouldCheckCRLF() && startWithLF(nextNode))
         {
             TreeNode node = nextNode.prev();
-            if (EndWithCR(node))
+            if (endWithCR(node))
             {
-                FixCRLF(node, nextNode);
+                fixCRLF(node, nextNode);
             }
         }
     }
 
-    private void FixCRLF(TreeNode prev, TreeNode next)
+    private void validateCRLFWithNextNode(TreeNode node)
+    {
+        if (shouldCheckCRLF() && endWithCR(node))
+        {
+            TreeNode nextNode = node.next();
+            if (startWithLF(nextNode))
+            {
+                fixCRLF(node, nextNode);
+            }
+        }
+    }
+
+    private void fixCRLF(TreeNode prev, TreeNode next)
     {
         var nodesToDel = new List<TreeNode>();
         var lineStarts = this._buffers![prev.piece!.bufferIndex].lineStarts;
@@ -689,6 +701,71 @@ public class PieceTreeBase
             nodesToDel.Append(prev);
         }
         
+    }
+
+    private bool adjustCarriageReturnFromNext(string value, TreeNode node)
+    {
+        if (shouldCheckCRLF() && endWithCR(value))
+        {
+            TreeNode nextNode = node.next();
+            if (startWithLF(nextNode))
+            {
+                // move `\n` forward
+                value += '\n';
+
+
+                if (nextNode.piece?.length == 1)
+                {
+                    TreeNode.rbDelete(this, nextNode);
+                }
+                else
+                {
+                    Piece piece = nextNode.piece!;
+                    BufferCursor newStart = new BufferCursor(piece.start.line+1,0);
+                    int newLength = piece.length - 1;
+                    int newLineFeedCnt = getLineFeedCnt(piece.bufferIndex, newStart, piece.end);
+                    nextNode.piece = new Piece
+                    (
+                        piece.bufferIndex,
+                        newStart,
+                        piece.end,
+                        newLineFeedCnt,
+                        newLength
+                    );
+
+
+                    TreeNode.updateTreeMetadata(this, nextNode, -1, -1);
+                }
+                return true;
+            }
+        }
+
+
+        return false;
+    }
+
+    private int getLineFeedCnt(int bufferIndex, BufferCursor start, BufferCursor end)
+    {
+        if(end.column == 0) return end.line-start.line;
+
+        var lineStarts = this._buffers![bufferIndex].lineStarts;
+        if(end.line == lineStarts.Count()-1) return end.line- start.line;
+
+        var nextLineStartOffset = lineStarts[end.line+1];
+        var endOffset = lineStarts[end.line]+end.column;
+
+        if(nextLineStartOffset>endOffset+1) return end.line - start.line;
+
+        var previousCharOffset = endOffset-1;
+        var buffer = this._buffers![bufferIndex].buffer;
+
+        if(buffer[previousCharOffset] == 13)
+        {
+            return end.line-start.line+1;
+        }else {
+            return end.line - start.line;
+        }
+
     }
 
     private int NodeCharCodeAt(TreeNode node, int offset)
