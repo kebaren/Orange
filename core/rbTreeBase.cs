@@ -110,7 +110,7 @@ public class TreeNode
         }
     }
 
-    void rbDelete(PieceTreeBase tree, TreeNode z)
+    public void rbDelete(PieceTreeBase tree, TreeNode z)
     {
         TreeNode x;
         TreeNode y;
@@ -139,7 +139,7 @@ public class TreeNode
             {
                 x.color = NodeColor.Black;
             }
-            z.Detach();
+            z.detach();
             resetSentinel();
             if (tree.root != null)
             {
@@ -187,7 +187,7 @@ public class TreeNode
             }
             else
             {
-                if (z == z.parent.left)
+                if (z == z.parent!.left)
                 {
                     z.parent.left = y;
                 }
@@ -207,23 +207,23 @@ public class TreeNode
             }
             // 更新元数据
             // 我们用y替换z，所以在这个子树中，长度变化是z.Data的长度（假设Data是相关数据属性）
-            y.Sizeleft = z.Sizeleft;
-            y.Lfleft = z.Lfleft;
+            y.size_left = z.size_left;
+            y.lf_left = z.lf_left;
             recomputeTreeMetadata(tree, y);
         }
 
-        z.Detach();
+        z.detach();
 
         if (x.parent.left == x)
         {
             int newSizeleft = calculateSize(x);
             int newLFleft = calculateLF(x);
-            if (newSizeleft != x.parent.Sizeleft || newLFleft != x.parent.Lfleft)
+            if (newSizeleft != x.parent.size_left || newLFleft != x.parent.lf_left)
             {
-                int delta = newSizeleft - x.parent.Sizeleft;
-                int lf_delta = newLFleft - x.parent.Lfleft;
-                x.parent.Sizeleft = newSizeleft;
-                x.parent.Lfleft = newLFleft;
+                int delta = newSizeleft - x.parent.size_left;
+                int lf_delta = newLFleft - x.parent.lf_left;
+                x.parent.size_left = newSizeleft;
+                x.parent.lf_left = newLFleft;
                 updateTreeMetadata(tree, x.parent, delta, lf_delta);
             }
         }
@@ -240,53 +240,53 @@ public class TreeNode
         TreeNode w;
         while (x != tree.root && x.color == NodeColor.Black)
         {
-            if (x == x.parent.left)
+            if (x == x.parent!.left)
             {
-                w = x.parent.right;
+                w = x.parent.right!;
 
                 if (w.color == NodeColor.Red)
                 {
                     w.color = NodeColor.Black;
                     x.parent.color = NodeColor.Red;
                     leftRotate(tree, x.parent);
-                    w = x.parent.right;
+                    w = x.parent.right!;
                 }
 
-                if (w.left.color == NodeColor.Black && w.right.color == NodeColor.Black)
+                if (w.left!.color == NodeColor.Black && w.right!.color == NodeColor.Black)
                 {
                     w.color = NodeColor.Red;
                     x = x.parent;
                 }
                 else
                 {
-                    if (w.right.color == NodeColor.Black)
+                    if (w.right!.color == NodeColor.Black)
                     {
                         w.left.color = NodeColor.Black;
                         w.color = NodeColor.Red;
                         rightRotate(tree, w);
-                        w = x.parent.right;
+                        w = x.parent.right!;
                     }
 
                     w.color = x.parent.color;
                     x.parent.color = NodeColor.Black;
-                    w.right.color = NodeColor.Black;
+                    w.right!.color = NodeColor.Black;
                     leftRotate(tree, x.parent);
                     x = tree.root;
                 }
             }
             else
             {
-                w = x.parent.left;
+                w = x.parent.left!;
 
                 if (w.color == NodeColor.Red)
                 {
                     w.color = NodeColor.Black;
                     x.parent.color = NodeColor.Red;
                     rightRotate(tree, x.parent);
-                    w = x.parent.left;
+                    w = x.parent.left!;
                 }
 
-                if (w.left.color == NodeColor.Black && w.right.color == NodeColor.Black)
+                if (w.left!.color == NodeColor.Black && w.right!.color == NodeColor.Black)
                 {
                     w.color = NodeColor.Red;
                     x = x.parent;
@@ -295,15 +295,15 @@ public class TreeNode
                 {
                     if (w.left.color == NodeColor.Black)
                     {
-                        w.right.color = NodeColor.Black;
+                        w.right!.color = NodeColor.Black;
                         w.color = NodeColor.Red;
                         leftRotate(tree, w);
-                        w = x.parent.left;
+                        w = x.parent.left!;
                     }
 
                     w.color = x.parent.color;
                     x.parent.color = NodeColor.Black;
-                    w.left.color = NodeColor.Black;
+                    w.left!.color = NodeColor.Black;
                     rightRotate(tree, x.parent);
                     x = tree.root;
                 }
@@ -313,8 +313,17 @@ public class TreeNode
         resetSentinel();
     }
 
+    public void detach()
+    {
+        this.parent = null!;
+        this.left = null!;
+        this.right = null!;
+    }
 
-
+    public void resetSentinel()
+    {
+        SENTINEL.parent = SENTINEL;
+    }
 
     public static int calculateSize(TreeNode node)
     {
@@ -390,4 +399,85 @@ public class TreeNode
             x = x.parent;
         }
     }
+
+
+    public static void leftRotate(PieceTreeBase tree, TreeNode x)
+    {
+        var y = x.right;
+
+        // fix size_left
+        if (x.piece != null)
+        {
+            y!.size_left += x.size_left + x.piece.length;
+            y.lf_left += x.lf_left + x.piece.lineFeedCnt;
+        }
+        else
+        {
+            y!.size_left += x.size_left;
+            y.lf_left += x.lf_left;
+        }
+
+        x.right = y.left;
+
+        if (y.left != SENTINEL)
+        {
+            y.left!.parent = x;
+        }
+        y.parent = x.parent;
+        if (x.parent == SENTINEL)
+        {
+            tree.root = y;
+        }
+        else if (x.parent!.left == x)
+        {
+            x.parent.left = y;
+        }
+        else
+        {
+            x.parent.right = y;
+        }
+        y.left = x;
+        x.parent = y;
+    }
+
+    public static void rightRotate(PieceTreeBase tree, TreeNode y)
+    {
+        var x = y.left;
+        y.left = x!.right;
+        if (x.right != SENTINEL)
+        {
+            x.right!.parent = y;
+        }
+        x.parent = y.parent;
+
+        // fix size_left
+        if (x.piece != null)
+        {
+            y.size_left += x.size_left + x.piece.length;
+            y.lf_left += x.lf_left + x.piece.lineFeedCnt;
+        }
+        else
+        {
+            y.size_left += x.size_left;
+            y.lf_left += x.lf_left;
+        }
+
+        if (y.parent == SENTINEL)
+        {
+            tree.root = x;
+        }
+        else if (y == y.parent!.right)
+        {
+            y.parent.right = x;
+        }
+        else
+        {
+            y.parent.left = x;
+        }
+
+        x.right = y;
+        y.parent = x;
+    }
+
+
 }

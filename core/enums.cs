@@ -1,6 +1,12 @@
 namespace piecetable;
 
 //reference vscode char code
+
+public enum DefaultEndOfLine
+{
+	LF = 1,
+	CRLF = 2
+}
 public enum CharCode{
     Null = 0,
 	/**

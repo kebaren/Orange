@@ -716,7 +716,7 @@ public class PieceTreeBase
 
                 if (nextNode.piece?.length == 1)
                 {
-                    TreeNode.rbDelete(this, nextNode);
+                    node.rbDelete(this, nextNode);
                 }
                 else
                 {
@@ -933,12 +933,12 @@ public class PieceTreeBase
                     if (x == x.parent.right)
                     {
                         x = x.parent;
-                        leftRotate(tree, x);
+                        TreeNode.leftRotate(tree, x);
                     }
 
                     x.parent!.color = NodeColor.Black;
                     x.parent.parent!.color = NodeColor.Red;
-                    rightRotate(tree, x.parent.parent);
+                    TreeNode.rightRotate(tree, x.parent.parent);
                 }
             }
             else
@@ -957,11 +957,11 @@ public class PieceTreeBase
                     if (x == x.parent.left)
                     {
                         x = x.parent;
-                        rightRotate(tree, x);
+                        TreeNode.rightRotate(tree, x);
                     }
                     x.parent!.color = NodeColor.Black;
                     x.parent.parent!.color = NodeColor.Red;
-                    leftRotate(tree, x.parent.parent);
+                    TreeNode.leftRotate(tree, x.parent.parent);
                 }
             }
 
@@ -971,85 +971,7 @@ public class PieceTreeBase
     }
 
 
-    public void leftRotate(PieceTreeBase tree, TreeNode x)
-    {
-        var y = x.right;
-
-        // fix size_left
-        if (x.piece != null)
-        {
-            y!.size_left += x.size_left + x.piece.length;
-            y.lf_left += x.lf_left + x.piece.lineFeedCnt;
-        }
-        else
-        {
-            y!.size_left += x.size_left;
-            y.lf_left += x.lf_left;
-        }
-
-        x.right = y.left;
-
-        if (y.left != SENTINEL)
-        {
-            y.left!.parent = x;
-        }
-        y.parent = x.parent;
-        if (x.parent == SENTINEL)
-        {
-            tree.root = y;
-        }
-        else if (x.parent!.left == x)
-        {
-            x.parent.left = y;
-        }
-        else
-        {
-            x.parent.right = y;
-        }
-        y.left = x;
-        x.parent = y;
-    }
-
-    public void rightRotate(PieceTreeBase tree, TreeNode y)
-    {
-        var x = y.left;
-        y.left = x!.right;
-        if (x.right != SENTINEL)
-        {
-            x.right!.parent = y;
-        }
-        x.parent = y.parent;
-
-        // fix size_left
-        if (x.piece != null)
-        {
-            y.size_left += x.size_left + x.piece.length;
-            y.lf_left += x.lf_left + x.piece.lineFeedCnt;
-        }
-        else
-        {
-            y.size_left += x.size_left;
-            y.lf_left += x.lf_left;
-        }
-
-        if (y.parent == SENTINEL)
-        {
-            tree.root = x;
-        }
-        else if (y == y.parent!.right)
-        {
-            y.parent.right = x;
-        }
-        else
-        {
-            y.parent.left = x;
-        }
-
-        x.right = y;
-        y.parent = x;
-    }
-
-
+    
 
     public void recomputeTreeMetadata(PieceTreeBase tree, TreeNode x)
     {
@@ -1130,6 +1052,18 @@ public class PieceTreeBase
     {
         var lineStarts = this._buffers![bufferIndex].lineStarts;
         return lineStarts.IndexOf(cursor.line) + cursor.column;
+    }
+
+    private string getContetnOfSubTree(TreeNode node)
+    {
+        var str = "";
+
+        this.iterate(node,node=>{
+            str += this.getNodeContent(node);
+            return true;
+        });
+
+        return str;
     }
 
 }
