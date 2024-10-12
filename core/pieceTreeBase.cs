@@ -25,7 +25,7 @@ public class LineStarts
     }
     public LineStarts() { }
 
-    public List<int> createLineStartsFast(string str, bool ReadOnly = true)
+    public static List<int> createLineStartsFast(string str, bool ReadOnly = true)
     {
         List<int> list = new List<int>() { 0 };
         int len = str.Length;
@@ -361,7 +361,7 @@ public class PieceTreeBase
             {
                 if (chunks[i].lineStarts == null)
                 {
-                    chunks[i].lineStarts = new LineStarts().createLineStartsFast(chunks[i].buffer);
+                    chunks[i].lineStarts = LineStarts.createLineStartsFast(chunks[i].buffer);
                 }
 
                 var piece = new Piece(i + 1, new BufferCursor(0, 0), new BufferCursor(chunks[i].lineStarts.Count - 1, chunks[i].buffer.Length - chunks[i].lineStarts.IndexOf(chunks[i].lineStarts.Count - 1)), chunks[i].lineStarts.Count - 1, chunks[i].buffer.Length);
@@ -404,7 +404,7 @@ public class PieceTreeBase
             String text;
             //flush anyways
             text = tempChunk.Replace("\r\n", eolStr).Replace("\r", eolStr).Replace("\n", eolStr);
-            chunks.Append(new StringBuffer(text, new LineStarts().createLineStartsFast(text)));
+            chunks.Append(new StringBuffer(text, LineStarts.createLineStartsFast(text)));
             tempChunk = str;
             tempChunkLen = len;
             return true;
@@ -413,7 +413,7 @@ public class PieceTreeBase
         if (tempChunkLen > 0)
         {
             var text = tempChunk.Replace("\r\n", eolStr).Replace("\r", eolStr).Replace("\n", eolStr);
-            chunks.Append(new StringBuffer(text, new LineStarts().createLineStartsFast(text)));
+            chunks.Append(new StringBuffer(text, LineStarts.createLineStartsFast(text)));
 
         }
         this.crate(chunks, eol, true);

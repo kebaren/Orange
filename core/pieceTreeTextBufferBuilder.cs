@@ -9,47 +9,57 @@ public class PieceTreeTextBufferFactory{
     private readonly int _cr;
     private readonly int _lf;
     private readonly int _crlf;
+    private readonly bool _containsRTL;
     private readonly bool _containsUnusualLineTerminators;
     private readonly bool _isBasicASCI;
     private readonly bool _normalizeEOL;
 
-    public PieceTreeTextBufferFactory(List<StringBuffer> _chunks, string _bom, int cr, int lf, int crlf, bool _containsUnusualLineTerminators, bool _isBasicASCI, bool _normalizeEOL )
+    public PieceTreeTextBufferFactory(List<StringBuffer> _chunks, string _bom, int cr, int lf, int crlf, bool _containsRTL, bool _containsUnusualLineTerminators, bool _isBasicASCI, bool _normalizeEOL )
     {
         this._chunks = _chunks;
         this._bom = _bom;
         this._cr = cr;
         this._lf = lf;
         this._crlf = crlf;
+        this._containsRTL = _containsRTL;
         this._containsUnusualLineTerminators =  _containsUnusualLineTerminators;
         this._isBasicASCI = _isBasicASCI;
         this._normalizeEOL = _normalizeEOL;
     }
 
-    private int[] getEOL(DefaultEndOfLine defaultEOL)
+    private DefaultEndOfLine getEOL(DefaultEndOfLine defaultEOL)
     {
         var totalEOLCount = this._cr+this._lf+this._crlf;
         var totalCRCount = this._cr+this._crlf;
 
         if(totalEOLCount == 0)
         {
-            return (defaultEOL == DefaultEndOfLine.LF ? [10]: [13,10]);
+            return (defaultEOL == DefaultEndOfLine.LF ? DefaultEndOfLine.LF: DefaultEndOfLine.CRLF);
         }
 
         if(totalCRCount > totalEOLCount/2)
         {
-            return [13,10];
+            return DefaultEndOfLine.CRLF;
         }
 
-        return [10];
+        return DefaultEndOfLine.LF;
     }
-    public PieceTreeBase cretePieceTreeBase(DefaultEndOfLine defaultEOL = DefaultEndOfLine.LF)
+    public PieceTreeTextBuffer cretePieceTreeBase(DefaultEndOfLine defaultEOL = DefaultEndOfLine.LF)
     {
         var EOL = getEOL(defaultEOL);
         var chunks = this._chunks;
-        if (_normalizeEOL && ((EOL == [13,10] && (cr>0 || lf>0)) || (EOL == [10] && cr>0 || _crlf >0))))
+        if (_normalizeEOL && ((EOL == DefaultEndOfLine.CRLF && (this._cr>0 || this._lf>0)) || (EOL == DefaultEndOfLine.LF && this._cr>0 || this._crlf >0)))
         {
-            
+            for(int i=0; i<chunks.Count(); i++)
+            {
+                var str = chunks[i].buffer.Replace("/\r\r|\r|\n/g",EOL.ToString());
+                var newLineStart = LineStarts.createLineStartsFast(str);
+                chunks[i] = new StringBuffer(str,newLineStart);
+            }
         }
+
+        var textBuffer = new PieceTreeTextBuffer(chunks,this._bom,this._containsRTL,this._containsUnusualLineTerminators,this._isBasicASCI,this._normalizeEOL);
+        return textBuffer;
     }
 }
 
